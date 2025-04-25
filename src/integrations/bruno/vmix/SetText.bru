@@ -1,0 +1,18 @@
+meta {
+  name: SetText
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost/api/?Function=SetText&Input=eb715929-1ac7-4e08-94d5-a071886c9fb2&SelectedName=person.Text&Value=Test
+  body: none
+  auth: inherit
+}
+
+params:query {
+  Function: SetText
+  Input: eb715929-1ac7-4e08-94d5-a071886c9fb2
+  SelectedName: person.Text
+  Value: Test
+}

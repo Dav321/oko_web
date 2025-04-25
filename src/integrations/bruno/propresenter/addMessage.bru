@@ -1,0 +1,27 @@
+meta {
+  name: addMessage
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost/v1/messages
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "id": {
+          "name": "API Message"
+      },
+      "message": "Kind XZ wird vermisst",
+      "theme": {
+          "name": "Lower 3rd Lyrics",
+          "index": 0,
+          "uuid": "1498a8e4-8cab-443d-87a1-09316c611175"
+      },
+      "tokens": [],
+      "visible_on_network": true
+  }
+}

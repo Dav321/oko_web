@@ -1,0 +1,2 @@
+SELECT * FROM vmix
+WHERE id = 0

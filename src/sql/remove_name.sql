@@ -1,0 +1,2 @@
+DELETE FROM names
+WHERE id=?1
