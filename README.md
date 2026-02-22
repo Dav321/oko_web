@@ -1,17 +1,13 @@
 # oko_web
 
-### Download daisyUI
-```bash
-curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.mjs
-curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.mjs
-```
+oko_web is a web-based tool built for [Osterkonferenz](https://osterkonferenz.de/).
+It controls lower thirds in vMix and announcements in ProPresenter from a single UI.
+Developed with Dioxus (Rust fullstack framework), it uses SQLite for data storage.
 
-### Running (Dev)
-```bash
-dx serve --web
-```
+Licensed under GPL-3.0-or-later.
 
-### Docker
-```bash
+## Running
+
+```shell script
 docker compose up -d
 ```
