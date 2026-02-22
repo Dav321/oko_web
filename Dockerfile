@@ -1,4 +1,4 @@
-FROM rust:1.86.0 AS chef
+FROM rust:1.93.1 AS chef
 RUN cargo install cargo-chef
 WORKDIR /app
 
@@ -15,9 +15,11 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ca
 RUN cargo binstall dioxus-cli --root /.cargo -y --force
 ENV PATH="/.cargo/bin:$PATH"
 
-RUN dx bundle --platform web
+RUN curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.mjs
 
-FROM rust:1.86.0-slim AS runtime
+RUN dx bundle --release --web
+
+FROM rust:1.93.0-slim AS runtime
 COPY --from=builder /app/target/dx/oko_web/release/web/ /usr/local/app
 
 ENV PORT=8080
@@ -25,4 +27,4 @@ ENV IP=0.0.0.0
 EXPOSE 8080:8080
 
 WORKDIR /usr/local/app
-ENTRYPOINT [ "/usr/local/app/server" ]
+ENTRYPOINT [ "/usr/local/app/oko_web" ]

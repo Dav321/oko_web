@@ -92,37 +92,50 @@ pub struct Text {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Vmix {
-    vmix_url: String,
+    url: String,
 
-    overlay: Overlay,
+    overlay_index: Overlay,
     object_uuid: String,
+
+    name_field: String,
+    title_field: String,
 }
 
 impl Vmix {
-    pub fn new(vmix_url: String, overlay: Overlay, object_uuid: String) -> Result<Self, String> {
+    pub fn new(vmix_url: String, overlay: Overlay, object_uuid: String, name_field: String, title_field: String) -> Result<Self, String> {
         Ok(Self {
-            vmix_url,
-            overlay,
+            url: vmix_url,
+            overlay_index: overlay,
             object_uuid,
+            name_field,
+            title_field,
         })
     }
 
     pub fn get_vmix_url(&self) -> String {
-        self.vmix_url.clone()
+        self.url.clone()
     }
 
     pub fn get_overlay_index(&self) -> Overlay {
-        self.overlay
+        self.overlay_index
     }
 
     pub fn get_object_uuid(&self) -> String {
         self.object_uuid.clone()
     }
 
+    pub fn get_name_field(&self) -> String {
+        self.name_field.clone()
+    }
+
+    pub fn get_title_field(&self) -> String {
+        self.title_field.clone()
+    }
+
     #[cfg(feature = "server")]
     pub async fn get_vmix_titles(&self) -> Result<BTreeMap<String, (String, Vec<String>)>, String> {
         let info = CLIENT.with(|client| {
-            client.get("http://".to_owned() + &self.vmix_url + "/api/")
+            client.get("http://".to_owned() + &self.url + "/api/")
                 .send()
         }).await;
         
@@ -161,7 +174,7 @@ impl Vmix {
         let response = CLIENT
             .with(|client| {
                 client
-                    .get("http://".to_owned() + &self.vmix_url + "/api/")
+                    .get("http://".to_owned() + &self.url + "/api/")
                     .query(&args)
                     .send()
             })
@@ -195,7 +208,7 @@ impl Vmix {
         self.request(vec![
             (
                 "Function",
-                &format!("{}{}", "OverlayInput", self.overlay as u8),
+                &format!("{}{}", "OverlayInput", self.overlay_index as u8),
             ),
             ("Input", &self.object_uuid.to_string()),
         ])

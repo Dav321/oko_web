@@ -6,17 +6,18 @@ license = "GPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
-dioxus = { version = "0.6.3", features = ["router", "fullstack", "logger"] }
-lucide-dioxus = "1.1.0"
+dioxus = { version = "0.7.3", features = ["router", "fullstack", "logger"] }
+dioxus-html = { version = "0.7.3", features = ["serialize"]}
+lucide-dioxus = { version = "2.569.0", features = ["all-icons"] }
 
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = { version = "1.0.140" }
-serde-xml-rs = "0.7.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.149" }
+serde-xml-rs = "0.8.2"
 
-rusqlite = { version = "0.35.0", features = ["bundled"], optional = true }
-reqwest = { version = "0.12.15", features = ["json"] }
+rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
+reqwest = { version = "0.13.2", features = ["json", "query"] }
 
-tracing = "0.1.41"
+anyhow = "1.0.102"
 
 [features]
 default = []
@@ -24,15 +25,3 @@ web = ["dioxus/web"]
 server = ["dioxus/server", "dep:rusqlite"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-
-[profile]
-
-[profile.wasm-dev]
-inherits = "dev"
-opt-level = 1
-
-[profile.server-dev]
-inherits = "dev"
-
-[profile.android-dev]
-inherits = "dev"

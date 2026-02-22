@@ -1,6 +1,11 @@
+/.git
 /.idea
 /target
 Cargo.lock
+.DS_Store
+**/*.rs.bk
 LICENSE.md
 README.md
 /db
+/assets/tailwind.css
+daisyui.mjs

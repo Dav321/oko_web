@@ -6,7 +6,7 @@ use serde_json::json;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProPresenter {
-    pro_presenter_url: String,
+    url: String,
 
     message_name: String,
 
@@ -24,7 +24,7 @@ impl ProPresenter {
         theme_uuid: String,
     ) -> Self {
         Self {
-            pro_presenter_url,
+            url: pro_presenter_url,
             message_name,
             theme_name,
             theme_index,
@@ -33,7 +33,7 @@ impl ProPresenter {
     }
 
     pub fn get_pro_presenter_url(&self) -> String {
-        self.pro_presenter_url.clone()
+        self.url.clone()
     }
 
     pub fn get_message_name(&self) -> String {
@@ -54,7 +54,7 @@ impl ProPresenter {
 
     #[cfg(feature = "server")]
     pub async fn add_message(&self, message: String) -> Result<(), String> {
-        let url = "http://".to_owned() + &self.pro_presenter_url + "/v1/messages";
+        let url = "http://".to_owned() + &self.url + "/v1/messages";
 
         let payload = json!({
             "id": json!({"name": self.message_name}),
@@ -89,7 +89,7 @@ impl ProPresenter {
 
     #[cfg(feature = "server")]
     pub async fn edit_message(&self, message: String) -> Result<(), String> {
-        let url = "http://".to_owned() + &self.pro_presenter_url + "/v1/message/" + &self.message_name;
+        let url = "http://".to_owned() + &self.url + "/v1/message/" + &self.message_name;
 
         let payload = json!({
             "id": json!({"name": self.message_name}),
@@ -125,7 +125,7 @@ impl ProPresenter {
     #[cfg(feature = "server")]
     pub async fn trigger_message(&self) -> Result<(), String> {
         let url = "http://".to_owned()
-            + &self.pro_presenter_url
+            + &self.url
             + "/v1/message/"
             + &self.message_name
             + "/trigger";
@@ -154,7 +154,7 @@ impl ProPresenter {
     #[cfg(feature = "server")]
     pub async fn clear_message(&self) -> Result<(), String> {
         let url = "http://".to_owned()
-            + &self.pro_presenter_url
+            + &self.url
             + "/v1/message/"
             + &self.message_name
             + "/clear";
@@ -179,7 +179,7 @@ impl ProPresenter {
     #[cfg(feature = "server")]
     pub async fn remove_message(&self) -> Result<(), String> {
         let url =
-            "http://".to_owned() + &self.pro_presenter_url + "/v1/message/" + &self.message_name;
+            "http://".to_owned() + &self.url + "/v1/message/" + &self.message_name;
 
         let response = CLIENT.with(|client| client.delete(url).send()).await;
 

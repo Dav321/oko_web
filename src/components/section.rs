@@ -1,5 +1,4 @@
 use crate::backend::{edit_section, remove_section};
-use dioxus::html::completions::CompleteWithBraces::data;
 use dioxus::prelude::*;
 use lucide_dioxus::Trash2;
 use std::collections::BTreeMap;

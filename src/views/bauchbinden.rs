@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use crate::backend::{add_name, add_section, get_bauchbinden, get_vmix_titles, set_bauchbinde_text};
 use crate::components::*;
 use dioxus::prelude::*;
@@ -93,14 +92,17 @@ pub fn Bauchbinden() -> Element {
                         }
                     }
                 }
-                if let Some((uuid, (name, texts))) = (*selected.read()).clone() {
+                if let Some((_, (_, texts))) = (*selected.read()).clone() {
                     form {
-                        onsubmit: move |event| {
-                            let vals = event.data.values();
+                        onsubmit: move |event: FormEvent| {
+                            event.prevent_default();
                             let (_, (_, t2)) = (*selected.read()).clone().unwrap();
                             async move {
                                 for t in t2 {
-                                    set_bauchbinde_text(t.clone(), vals.get(&t).unwrap().as_value()).await.expect("Unable to set BB Text");
+                                    let FormValue::Text(value) = event.data.get_first(&t).unwrap() else {
+                                        panic!("Unable to set BB Text: value not of type String");
+                                    };
+                                    set_bauchbinde_text(t.clone(), value).await.expect("Unable to set BB Text");
                                 }
                             }
                         },
@@ -161,7 +163,6 @@ pub fn Bauchbinden() -> Element {
                                     button {
                                         class: "card card-border bg-base-300 border-primary",
                                         onclick: move |_|  {
-                                            let name = section_name.clone();
                                             async move {
                                                 add_name("Unbennant".to_string(), section_id).await.expect("Could not create Section!");
                                                 data.restart();

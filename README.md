@@ -1,13 +1,14 @@
 # oko_web
 
-### Generate CSS
+### Download daisyUI
 ```bash
-npx tailwindcss -i ./input.css -o ./assets/tailwind.css --watch
+curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.mjs
+curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.mjs
 ```
 
 ### Running (Dev)
 ```bash
-dx serve --platform web
+dx serve --web
 ```
 
 ### Docker

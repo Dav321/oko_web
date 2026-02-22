@@ -1,5 +1,4 @@
 use crate::backend::{add_announcement, clear_announcement, edit_announcement_name, edit_announcement_text, get_announcements, remove_announcement, show_announcement};
-use crate::components::Title;
 use dioxus::prelude::*;
 use lucide_dioxus::{Minus, Pencil, PencilOff, Plus};
 
@@ -203,7 +202,7 @@ pub fn Announcements() -> Element {
                                     class: "card-body items-center text-center p-0",
                                     h2 {
                                         class: "card-title m-2 text-base font-normal",
-                                        { get_message(*selected.read(), &*token.read(), &list) }
+                                        { get_message(*selected.read(), &token.read(), &list) }
                                     }
                                 }
                             }
@@ -212,7 +211,7 @@ pub fn Announcements() -> Element {
                                 button {
                                     class: "btn btn-primary grow mr-2",
                                     onclick: move |_| {
-                                        let msg = get_message(*selected.read(), &*token.read(), &list);
+                                        let msg = get_message(*selected.read(), &token.read(), &list);
                                         async move {
                                             let _ = clear_announcement().await;
                                             show_announcement(msg).await.expect("Unable to add announcement");

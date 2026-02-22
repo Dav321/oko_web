@@ -1,8 +1,7 @@
-use crate::backend::{get_announcements, get_propresenter, get_vmix, get_vmix_titles, set_propresenter, set_vmix};
-use crate::components::{Setting, Title};
+use crate::backend::{get_propresenter, get_vmix, get_vmix_titles, set_propresenter, set_vmix};
+use crate::components::{Setting};
 use crate::integrations::{ProPresenter, Vmix};
 use dioxus::prelude::*;
-use tracing::debug;
 
 #[component]
 pub fn Settings() -> Element {
@@ -25,18 +24,10 @@ pub fn Settings() -> Element {
                 if let Ok(value) = propresenter.value().unwrap() {
                     form {
                         class: "grow",
-                        onsubmit: move |e: Event<FormData>| {
-                            let values = e.values();
-                            let pp = ProPresenter::new(
-                                values.get("url").unwrap().as_value(),
-                                values.get("message_name").unwrap().as_value(),
-                                values.get("theme_name").unwrap().as_value(),
-                                values.get("theme_index").unwrap().as_value().parse().unwrap(),
-                                values.get("theme_uuid").unwrap().as_value()
-                            );
-                            async move {
-                                set_propresenter(pp).await.expect("Unable to set propresenter Settings");
-                            }
+                        onsubmit: move |e: FormEvent| async move {
+                            e.prevent_default();
+                            let pp: ProPresenter = e.parsed_values().unwrap();
+                            set_propresenter(pp).await.expect("Unable to set propresenter Settings");
                         },
                         fieldset {
                             class: "fieldset bg-base-200 border border-base-300 p-4 rounded-box",
@@ -80,21 +71,13 @@ pub fn Settings() -> Element {
                 div {
                     class: "divider lg:divider-horizontal invisible"
                 }
-                if let Ok((value, (name_field, title_field))) = vmix.value().unwrap() {
+                if let Ok(vmix) = vmix.value().unwrap() {
                     form {
                         class: "grow",
-                        onsubmit: move |e: Event<FormData>| {
-                            let values = e.values();
-                            let vm = Vmix::new(
-                                values.get("url").unwrap().as_value(),
-                                values.get("overlay_index").unwrap().as_value().parse().unwrap(),
-                                values.get("object_uuid").unwrap().as_value()
-                            ).unwrap();
-                            let name_field = values.get("name_field").unwrap().as_value();
-                            let title_field = values.get("title_field").unwrap().as_value();
-                            async move {
-                                set_vmix(vm, name_field, title_field).await.expect("Unable to set vmix Settings");
-                            }
+                        onsubmit: move |e: FormEvent| async move {
+                            e.prevent_default();
+                            let vmix: Vmix = e.parsed_values().unwrap();
+                            set_vmix(vmix).await.expect("Unable to set vmix Settings");
                         },
                         fieldset {
                             class: "fieldset bg-base-200 border border-base-300 p-4 rounded-box",
@@ -105,27 +88,27 @@ pub fn Settings() -> Element {
                             Setting {
                                 name: "IP + Port",
                                 id: "url",
-                                value: value.get_vmix_url(),
+                                value: vmix.get_vmix_url(),
                             }
                             Setting {
                                 name: "Overlay Index (1-8)",
                                 id: "overlay_index",
-                                value: value.get_overlay_index() as i32,
+                                value: vmix.get_overlay_index() as i32,
                             }
                             Setting {
                                 name: "Object UUID",
                                 id: "object_uuid",
-                                value: value.get_object_uuid(),
+                                value: vmix.get_object_uuid(),
                             }
                             Setting {
                                 name: "Name Field",
                                 id: "name_field",
-                                value: name_field,
+                                value: vmix.get_name_field(),
                             }
                             Setting {
                                 name: "Title Field",
                                 id: "title_field",
-                                value: title_field,
+                                value: vmix.get_title_field(),
                             }
                             button {
                                 class: "btn btn-primary mt-4",
