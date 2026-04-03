@@ -1,67 +1,10 @@
-use std::collections::BTreeMap;
 #[cfg(feature = "server")]
 use crate::backend::CLIENT;
-#[cfg(feature = "server")]
-use rusqlite::ToSql;
-#[cfg(feature = "server")]
-use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_xml_rs::from_str;
-
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-pub enum Overlay {
-    Overlay1 = 1,
-    Overlay2 = 2,
-    Overlay3 = 3,
-    Overlay4 = 4,
-    Overlay5 = 5,
-    Overlay6 = 6,
-    Overlay7 = 7,
-    Overlay8 = 8,
-}
-
-impl FromStr for Overlay {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "1" => Ok(Overlay::Overlay1),
-            "2" => Ok(Overlay::Overlay2),
-            "3" => Ok(Overlay::Overlay3),
-            "4" => Ok(Overlay::Overlay4),
-            "5" => Ok(Overlay::Overlay4),
-            "6" => Ok(Overlay::Overlay4),
-            "7" => Ok(Overlay::Overlay4),
-            "8" => Ok(Overlay::Overlay4),
-            &_ => Err("Unknown overlay type"),
-        }
-    }
-}
-
-#[cfg(feature = "server")]
-impl ToSql for Overlay {
-    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
-        Ok(ToSqlOutput::from(self.clone() as u8))
-    }
-}
-
-#[cfg(feature = "server")]
-impl FromSql for Overlay {
-    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        match u8::column_result(value)? {
-            1 => Ok(Overlay::Overlay1),
-            2 => Ok(Overlay::Overlay2),
-            3 => Ok(Overlay::Overlay3),
-            4 => Ok(Overlay::Overlay4),
-            5 => Ok(Overlay::Overlay5),
-            6 => Ok(Overlay::Overlay6),
-            7 => Ok(Overlay::Overlay7),
-            8 => Ok(Overlay::Overlay8),
-            i => Err(FromSqlError::OutOfRange(i as i64)),
-        }
-    }
-}
+use std::collections::BTreeMap;
+use std::str;
+use std::str::FromStr;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct VmixXML {
@@ -79,14 +22,18 @@ pub struct Inputs {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Input {
+    #[serde(rename = "@key")]
     key: String,
+    #[serde(rename = "@type")]
     r#type: String,
+    #[serde(rename = "@title")]
     title: String,
     text: Option<Vec<Text>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Text {
+    #[serde(rename = "@name")]
     name: String,
 }
 
@@ -94,7 +41,7 @@ pub struct Text {
 pub struct Vmix {
     url: String,
 
-    overlay_index: Overlay,
+    overlay_index: String,
     object_uuid: String,
 
     name_field: String,
@@ -102,7 +49,20 @@ pub struct Vmix {
 }
 
 impl Vmix {
-    pub fn new(vmix_url: String, overlay: Overlay, object_uuid: String, name_field: String, title_field: String) -> Result<Self, String> {
+    pub fn new(
+        vmix_url: String,
+        overlay: String,
+        object_uuid: String,
+        name_field: String,
+        title_field: String,
+    ) -> Result<Self, &'static str> {
+        let overlay_num = match u8::from_str(&overlay) {
+            Ok(n) => n,
+            Err(_) => return Err("Overlay NaN"),
+        };
+        if overlay_num > 8 || overlay_num < 1 {
+            return Err("Invalid overlay!");
+        }
         Ok(Self {
             url: vmix_url,
             overlay_index: overlay,
@@ -116,8 +76,8 @@ impl Vmix {
         self.url.clone()
     }
 
-    pub fn get_overlay_index(&self) -> Overlay {
-        self.overlay_index
+    pub fn get_overlay_index(&self) -> String {
+        self.overlay_index.clone()
     }
 
     pub fn get_object_uuid(&self) -> String {
@@ -134,11 +94,14 @@ impl Vmix {
 
     #[cfg(feature = "server")]
     pub async fn get_vmix_titles(&self) -> Result<BTreeMap<String, (String, Vec<String>)>, String> {
-        let info = CLIENT.with(|client| {
-            client.get("http://".to_owned() + &self.url + "/api/")
-                .send()
-        }).await;
-        
+        let info = CLIENT
+            .with(|client| {
+                client
+                    .get("http://".to_owned() + &self.url + "/api/")
+                    .send()
+            })
+            .await;
+
         let info = match info {
             Ok(result) => result,
             Err(e) => return Err(e.to_string()),
@@ -147,21 +110,22 @@ impl Vmix {
         if !info.status().is_success() {
             return Err(info.status().to_string());
         }
-        
+
         let raw = info.text().await.unwrap();
-        
+
         let xml: VmixXML = from_str(&raw).unwrap();
-        
-        let options: Vec<&Input> = xml.inputs.inputs.iter()
+
+        let options: Vec<&Input> = xml
+            .inputs
+            .inputs
+            .iter()
             .filter(|input| input.r#type == "GT")
             .collect();
-        
+
         let mut res = BTreeMap::new();
         for option in options {
             if let Some(texts) = &option.text {
-                let texts: Vec<String> = texts.iter().map(|text| {
-                    text.name.clone()
-                }).collect();
+                let texts: Vec<String> = texts.iter().map(|text| text.name.clone()).collect();
                 res.insert(option.key.clone(), (option.title.clone(), texts));
             }
         }
@@ -208,7 +172,7 @@ impl Vmix {
         self.request(vec![
             (
                 "Function",
-                &format!("{}{}", "OverlayInput", self.overlay_index as u8),
+                &format!("{}{}", "OverlayInput", self.overlay_index),
             ),
             ("Input", &self.object_uuid.to_string()),
         ])

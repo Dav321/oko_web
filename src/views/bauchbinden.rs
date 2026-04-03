@@ -1,4 +1,6 @@
-use crate::backend::{add_name, add_section, get_bauchbinden, get_vmix_titles, set_bauchbinde_text};
+use crate::backend::{
+    add_name, add_section, get_bauchbinden, get_vmix_titles, set_bauchbinde_text,
+};
 use crate::components::*;
 use dioxus::prelude::*;
 use lucide_dioxus::{Image, ImageOff, Pencil, PencilOff, Plus};

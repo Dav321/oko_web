@@ -1,4 +1,5 @@
 use components::*;
+use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use views::*;
 
@@ -25,6 +26,7 @@ const FAVICON: Asset = asset!("/assets/favicon.ico");
 const CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
+    dioxus::logger::init(Level::DEBUG).expect("failed to init logger");
     dioxus::launch(App);
 }
 

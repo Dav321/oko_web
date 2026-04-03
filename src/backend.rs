@@ -1,6 +1,9 @@
 use crate::integrations::{ProPresenter, Vmix};
 use dioxus::prelude::*;
 use std::collections::BTreeMap;
+use std::str::FromStr;
+#[cfg(feature = "server")]
+use tokio::time::{Duration, sleep};
 
 macro_rules! simple_file_sql {
     ($name : ident, $param : ty) => {
@@ -66,9 +69,8 @@ pub async fn show_announcement(announcement: String) -> Result<(), ServerFnError
         error!("Add Error: {}", e);
     };
 
-    if let Err(e) = pp.trigger_message().await {
-        error!("Trigger Error: {}", e);
-    };
+    sleep(Duration::from_millis(500)).await;
+
     if let Err(e) = pp.trigger_message().await {
         error!("Trigger Error: {}", e);
     };
@@ -84,12 +86,22 @@ pub async fn clear_announcement() -> Result<(), ServerFnError> {
         error!(e);
     };
 
+    if let Err(e) = pp.remove_message().await {
+        error!(e);
+    };
+
     Ok(())
 }
 
 #[server]
 pub async fn get_propresenter() -> Result<ProPresenter, ServerFnError> {
-    let (url, message_name, theme_name, theme_index, theme_uuid) = DB.with(|f| {
+    let (url, message_name, theme_name, theme_index, theme_uuid): (
+        String,
+        String,
+        String,
+        i32,
+        String,
+    ) = DB.with(|f| {
         f.prepare(include_str!("sql/get_propresenter.sql"))
             .unwrap()
             .query_row([], |row| {
@@ -103,7 +115,13 @@ pub async fn get_propresenter() -> Result<ProPresenter, ServerFnError> {
             })
             .unwrap()
     });
-    let pro_presenter = ProPresenter::new(url, message_name, theme_name, theme_index, theme_uuid);
+    let pro_presenter = ProPresenter::new(
+        url,
+        message_name,
+        theme_name,
+        theme_index.to_string(),
+        theme_uuid,
+    );
     Ok(pro_presenter)
 }
 
@@ -113,7 +131,7 @@ pub async fn set_propresenter(pp: ProPresenter) -> Result<(), anyhow::Error> {
         pp.get_pro_presenter_url(),
         pp.get_message_name(),
         pp.get_theme_name(),
-        pp.get_theme_index(),
+        i32::from_str(&pp.get_theme_index())?,
         pp.get_theme_uuid(),
     );
     let _ = DB.with(|f| f.execute(include_str!("sql/set_propresenter.sql"), params))?;
@@ -196,7 +214,13 @@ simple_file_sql!(remove_name, i32);
 
 #[server]
 pub async fn get_vmix() -> Result<Vmix, ServerFnError> {
-    let (vmix_url, overlay_index, object_uuid, name_field, title_field) = DB.with(|f| {
+    let (vmix_url, overlay_index, object_uuid, name_field, title_field): (
+        String,
+        u8,
+        String,
+        String,
+        String,
+    ) = DB.with(|f| {
         f.prepare(include_str!("sql/get_vmix.sql"))
             .unwrap()
             .query_row([], |row| {
@@ -210,7 +234,14 @@ pub async fn get_vmix() -> Result<Vmix, ServerFnError> {
             })
             .unwrap()
     });
-    let vmix = Vmix::new(vmix_url, overlay_index, object_uuid, name_field, title_field).unwrap();
+    let vmix = Vmix::new(
+        vmix_url,
+        overlay_index.to_string(),
+        object_uuid,
+        name_field,
+        title_field,
+    )
+    .unwrap();
     Ok(vmix)
 }
 
@@ -220,17 +251,19 @@ pub async fn get_vmix_titles() -> Result<BTreeMap<String, (String, Vec<String>)>
     let res = vmix.get_vmix_titles().await;
     match res {
         Ok(v) => Ok(v),
-        Err(e) => Err(ServerFnError::ServerError { message: e, code: 500, details: None }),
+        Err(e) => Err(ServerFnError::ServerError {
+            message: e,
+            code: 500,
+            details: None,
+        }),
     }
 }
 
 #[server]
-pub async fn set_vmix(
-    vmix: Vmix
-) -> Result<(), anyhow::Error> {
+pub async fn set_vmix(vmix: Vmix) -> Result<(), anyhow::Error> {
     let params = (
         vmix.get_vmix_url(),
-        vmix.get_overlay_index(),
+        u8::from_str(&vmix.get_overlay_index())?,
         vmix.get_object_uuid(),
         vmix.get_name_field(),
         vmix.get_title_field(),

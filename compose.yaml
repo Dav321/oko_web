@@ -2,7 +2,7 @@ services:
   oko-web:
     build: .
     ports:
-      - "8080:8080"
+      - "80:8080"
     restart: always
     volumes:
       - ./db/:/usr/local/app/db/:rw

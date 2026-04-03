@@ -1,4 +1,7 @@
-use crate::backend::{add_announcement, clear_announcement, edit_announcement_name, edit_announcement_text, get_announcements, remove_announcement, show_announcement};
+use crate::backend::{
+    add_announcement, clear_announcement, edit_announcement_name, edit_announcement_text,
+    get_announcements, remove_announcement, show_announcement,
+};
 use dioxus::prelude::*;
 use lucide_dioxus::{Minus, Pencil, PencilOff, Plus};
 

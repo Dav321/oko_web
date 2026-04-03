@@ -27,4 +27,4 @@ ENV IP=0.0.0.0
 EXPOSE 8080:8080
 
 WORKDIR /usr/local/app
-ENTRYPOINT [ "/usr/local/app/oko_web" ]
+ENTRYPOINT [ "/usr/local/app/server" ]

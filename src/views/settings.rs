@@ -1,5 +1,5 @@
 use crate::backend::{get_propresenter, get_vmix, get_vmix_titles, set_propresenter, set_vmix};
-use crate::components::{Setting};
+use crate::components::Setting;
 use crate::integrations::{ProPresenter, Vmix};
 use dioxus::prelude::*;
 
@@ -76,7 +76,7 @@ pub fn Settings() -> Element {
                         class: "grow",
                         onsubmit: move |e: FormEvent| async move {
                             e.prevent_default();
-                            let vmix: Vmix = e.parsed_values().unwrap();
+                            let vmix: Vmix = e.parsed_values().expect("Unable to parse vmix Settings");
                             set_vmix(vmix).await.expect("Unable to set vmix Settings");
                         },
                         fieldset {
@@ -93,7 +93,7 @@ pub fn Settings() -> Element {
                             Setting {
                                 name: "Overlay Index (1-8)",
                                 id: "overlay_index",
-                                value: vmix.get_overlay_index() as i32,
+                                value: vmix.get_overlay_index(),
                             }
                             Setting {
                                 name: "Object UUID",

@@ -3,6 +3,7 @@ use crate::backend::CLIENT;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProPresenter {
@@ -11,8 +12,18 @@ pub struct ProPresenter {
     message_name: String,
 
     theme_name: String,
-    theme_index: i32,
+    theme_index: String,
     theme_uuid: String,
+}
+
+pub struct Theme {
+    id: ThemeId,
+}
+
+pub struct ThemeId {
+    index: i32,
+    name: String,
+    uuid: String,
 }
 
 impl ProPresenter {
@@ -20,7 +31,7 @@ impl ProPresenter {
         pro_presenter_url: String,
         message_name: String,
         theme_name: String,
-        theme_index: i32,
+        theme_index: String,
         theme_uuid: String,
     ) -> Self {
         Self {
@@ -44,8 +55,8 @@ impl ProPresenter {
         self.theme_name.clone()
     }
 
-    pub fn get_theme_index(&self) -> i32 {
-        self.theme_index
+    pub fn get_theme_index(&self) -> String {
+        self.theme_index.clone()
     }
 
     pub fn get_theme_uuid(&self) -> String {
@@ -61,11 +72,12 @@ impl ProPresenter {
             "message": message,
             "theme": json!({
                 "name": self.theme_name,
-                "index": self.theme_index,
+                "index": i32::from_str(&self.theme_index).unwrap(),
                 "uuid": self.theme_uuid,
             }),
             "tokens": Vec::<i32>::new(),
             "visible_on_network": true,
+            "is_active": true,
         });
 
         let mut headers = reqwest::header::HeaderMap::new();
@@ -124,11 +136,8 @@ impl ProPresenter {
 
     #[cfg(feature = "server")]
     pub async fn trigger_message(&self) -> Result<(), String> {
-        let url = "http://".to_owned()
-            + &self.url
-            + "/v1/message/"
-            + &self.message_name
-            + "/trigger";
+        let url =
+            "http://".to_owned() + &self.url + "/v1/message/" + &self.message_name + "/trigger";
 
         let payload = json!(Vec::<i32>::new());
 
@@ -153,21 +162,14 @@ impl ProPresenter {
 
     #[cfg(feature = "server")]
     pub async fn clear_message(&self) -> Result<(), String> {
-        let url = "http://".to_owned()
-            + &self.url
-            + "/v1/message/"
-            + &self.message_name
-            + "/clear";
-        
+        let url = "http://".to_owned() + &self.url + "/v1/message/" + &self.message_name + "/clear";
 
         let response = CLIENT.with(|client| client.get(url).send()).await;
-        
 
         let result = match response {
             Ok(result) => result,
             Err(e) => return Err(e.to_string()),
         };
-        
 
         if !result.status().is_success() {
             return Err(result.text().await.unwrap());
@@ -178,8 +180,7 @@ impl ProPresenter {
 
     #[cfg(feature = "server")]
     pub async fn remove_message(&self) -> Result<(), String> {
-        let url =
-            "http://".to_owned() + &self.url + "/v1/message/" + &self.message_name;
+        let url = "http://".to_owned() + &self.url + "/v1/message/" + &self.message_name;
 
         let response = CLIENT.with(|client| client.delete(url).send()).await;
 
